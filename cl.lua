@@ -569,3 +569,53 @@ Citizen.CreateThread(function()
 		Wait(0)
 	end
 end)
+
+local showbones = false
+
+RegisterCommand('showbones', function()
+    showbones = not showbones
+    print("showbones:"..tostring(showbones))
+end)
+
+-- Function to Draw 3D Text at a given position
+function DrawText3D(x, y, z, text)
+    local onScreen, _x, _y = World3dToScreen2d(x, y, z)
+    local camCoords = GetGameplayCamCoords()
+    local dist = #(camCoords - vec3(x, y, z))
+
+    local scale = (1 / dist) * 2
+    local fov = (1 / GetGameplayCamFov()) * 100
+    scale = scale * fov
+
+    if onScreen then
+        SetTextScale(0.35 * scale, 0.35 * scale)
+        SetTextFont(12)
+        SetTextProportional(1)
+        SetTextColour(255, 255, 255, 255)
+        SetTextDropshadow(0, 0, 0, 0, 255)
+        SetTextEdge(2, 0, 0, 0, 150)
+        SetTextDropShadow()
+        SetTextOutline()
+        SetTextEntry("STRING")
+        SetTextCentre(1)
+        AddTextComponentString(text)
+        DrawText(_x, _y)
+    end
+end
+
+CreateThread(function()
+    while true do
+        if showbones then
+            local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
+            if vehicle and DoesEntityExist(vehicle) then
+                for i = 0, GetEntityBoneCount(vehicle) - 1 do
+                    local bonePos = GetWorldPositionOfEntityBone(vehicle, i)
+                    if bonePos then
+                        DrawText3D(bonePos.x, bonePos.y, bonePos.z, "Bone ID: " .. tostring(i)) -- Display bone ID instead
+                    end
+                end
+            end
+        end
+        Wait(0)
+    end
+end)
